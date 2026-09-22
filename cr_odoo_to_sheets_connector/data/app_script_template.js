@@ -362,17 +362,23 @@ function showSelectTablesDialog() {
     '  document.getElementById("step1").style.display = "block";' +
     '}' +
     'function goToStep2() {' +
-    '  if (!selectedModel) return;' +
+    '  if (!selectedModel) {' +
+    '    var chk = document.querySelector(\'input[name="tableRadio"]:checked\');' +
+    '    if (chk && chk.value) { selectedModel = chk.value; }' +
+    '  }' +
+    '  if (!selectedModel || selectedModel === "null" || selectedModel === "undefined") {' +
+    '    alert("Please select a table from the list first."); return;' +
+    '  }' +
     '  document.getElementById("step1").style.display = "none";' +
     '  document.getElementById("step2").style.display = "block";' +
-    '  document.getElementById("fieldsList").innerHTML = "<div style=\'padding:20px; text-align:center;\'>Loading fields...</div>";' +
+    '  document.getElementById("fieldsList").innerHTML = "<div style=\'padding:20px; text-align:center;\'>Loading fields for " + selectedModel + "...</div>";' +
     '  google.script.run.withSuccessHandler(function(res) {' +
-    '    fields = res.data || [];' +
+    '    fields = (res && res.data) ? res.data : [];' +
     '    renderFields(fields);' +
     '    toggleAllFields(true);' +
     '    document.getElementById("chkAllFields").checked = true;' +
     '  }).withFailureHandler(function(err) {' +
-    '    document.getElementById("fieldsList").innerHTML = "<div style=\'color:red; padding:10px;\'>" + err.message + "</div>";' +
+    '    document.getElementById("fieldsList").innerHTML = "<div style=\'color:red; padding:10px; font-weight:bold;\'>" + err.message + "</div>";' +
     '  }).getOdooFields(selectedModel);' +
     '}' +
     'function renderFields(list) {' +
@@ -453,11 +459,17 @@ function getOdooModels() {
 }
 
 function getOdooFields(modelName) {
-  return callOdooApi("/api/odoo_to_sheets/fields", { model: modelName });
+  if (!modelName || modelName === "null" || modelName === "undefined") {
+    throw new Error("No table selected. Please click 'Back' and select a table from the list.");
+  }
+  return callOdooApi("/api/odoo_to_sheets/fields?model=" + encodeURIComponent(modelName), { model: modelName });
 }
 
 function processFetchData(modelName, selectedFields) {
-  var res = callOdooApi("/api/odoo_to_sheets/fetch_data", {
+  if (!modelName || modelName === "null" || modelName === "undefined") {
+    throw new Error("No table selected. Please select a table first.");
+  }
+  var res = callOdooApi("/api/odoo_to_sheets/fetch_data?model=" + encodeURIComponent(modelName), {
     model: modelName,
     fields: selectedFields
   });

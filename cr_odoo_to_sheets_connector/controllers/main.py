@@ -10,13 +10,28 @@ _logger = logging.getLogger(__name__)
 class CrGoogleSheetConnectorController(http.Controller):
 
     def _get_request_data(self, **kwargs):
-        """Extracts JSON body or falling back to URL kwargs."""
+        """Extracts JSON body and merges URL kwargs and args."""
+        data = {}
         try:
             data = request.get_json_data() or {}
         except Exception:
+            pass
+        if not data:
+            try:
+                raw = request.httprequest.get_data(as_text=True)
+                if raw:
+                    data = json.loads(raw)
+            except Exception:
+                pass
+        if not data:
             data = {}
-        if not data and kwargs:
-            data = dict(kwargs)
+        if kwargs:
+            for k, v in kwargs.items():
+                if k not in data or data[k] is None:
+                    data[k] = v
+        for k, v in request.httprequest.args.items():
+            if k not in data or data[k] is None:
+                data[k] = v
         return data
 
     def _authenticate_token(self, data, **kwargs):
