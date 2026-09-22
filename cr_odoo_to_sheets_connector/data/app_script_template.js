@@ -477,8 +477,7 @@ function processFetchData(modelName, selectedFields) {
   if (!modelName || modelName === "null" || modelName === "undefined") {
     throw new Error("No table selected. Please select a table first.");
   }
-  var fieldsParam = (Array.isArray(selectedFields) ? selectedFields.join(",") : "");
-  var res = callOdooApi("/api/odoo_to_sheets/fetch_data?model=" + encodeURIComponent(modelName) + "&fields=" + encodeURIComponent(fieldsParam), {
+  var res = callOdooApi("/api/odoo_to_sheets/fetch_data?model=" + encodeURIComponent(modelName), {
     model: modelName,
     fields: selectedFields
   });
