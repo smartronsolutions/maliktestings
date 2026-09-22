@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_cr_google_sheet_connector_config_user,cr.google.sheet.connector.config.user,model_cr_google_sheet_connector_config,base.group_user,1,1,1,1
+access_cr_google_sheet_connector_config_manager,cr.google.sheet.connector.config.manager,model_cr_google_sheet_connector_config,base.group_system,1,1,1,1
+access_cr_data_processing_log_user,cr.data.processing.log.user,model_cr_data_processing_log,base.group_user,1,1,1,1
+access_cr_data_processing_log_manager,cr.data.processing.log.manager,model_cr_data_processing_log,base.group_system,1,1,1,1
+

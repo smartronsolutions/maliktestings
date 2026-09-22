@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top-level Root Menu -->
+    <menuitem id="menu_cr_google_sheet_connector_root"
+              name="Google Sheet Connector"
+              web_icon="cr_odoo_to_sheets_connector,static/description/icon.png"
+              sequence="55"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_cr_google_sheet_connector_config"
+              name="Configuration"
+              parent="menu_cr_google_sheet_connector_root"
+              action="action_cr_google_sheet_connector_config"
+              sequence="10"/>
+
+    <!-- Data Processing Logs Menu -->
+    <menuitem id="menu_cr_data_processing_log"
+              name="Data Processing Logs"
+              parent="menu_cr_google_sheet_connector_root"
+              action="action_cr_data_processing_log"
+              sequence="20"/>
+
+</odoo>
+

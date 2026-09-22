@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_cr_google_sheet_connector_config_list" model="ir.ui.view">
+        <field name="name">cr.google.sheet.connector.config.list</field>
+        <field name="model">cr.google.sheet.connector.config</field>
+        <field name="arch" type="xml">
+            <list string="Google Sheet Connector">
+                <field name="connector_url"/>
+                <field name="access_token"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_cr_google_sheet_connector_config_form" model="ir.ui.view">
+        <field name="name">cr.google.sheet.connector.config.form</field>
+        <field name="model">cr.google.sheet.connector.config</field>
+        <field name="arch" type="xml">
+            <form string="Google Sheet Connector">
+                <header>
+                    <button name="action_generate_token" string="Generate Token" type="object" class="btn-primary"/>
+                    <button name="action_generate_app_script" string="Generate App Script" type="object" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Connector Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="connector_url" placeholder="https://your-odoo-domain.com"/>
+                            <field name="access_token" widget="CopyClipboardChar" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_cr_google_sheet_connector_config" model="ir.actions.act_window">
+        <field name="name">Google Sheet Connector</field>
+        <field name="res_model">cr.google.sheet.connector.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Click New to create a new connector configuration.
+            </p>
+        </field>
+    </record>
+
+</odoo>
+
