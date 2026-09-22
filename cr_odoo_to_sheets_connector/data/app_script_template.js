@@ -90,7 +90,11 @@ function callOdooApi(endpoint, payload) {
     throw new Error("Google Sheets runs on Google Cloud servers and cannot reach 'localhost'. Please use your public Odoo domain/IP or an ngrok/Cloudflare tunnel URL.");
   }
   
-  var fullUrl = config.url + endpoint;
+  var payloadObj = payload || {};
+  payloadObj.access_token = config.token;
+  var sep = endpoint.indexOf("?") === -1 ? "?" : "&";
+  var fullUrl = config.url + endpoint + sep + "access_token=" + encodeURIComponent(config.token);
+  
   var headers = {
     "Authorization": "Bearer " + config.token,
     "Content-Type": "application/json"
@@ -99,8 +103,9 @@ function callOdooApi(endpoint, payload) {
   var options = {
     "method": "post",
     "headers": headers,
-    "payload": JSON.stringify(payload || {}),
-    "muteHttpExceptions": true
+    "payload": JSON.stringify(payloadObj),
+    "muteHttpExceptions": true,
+    "validateHttpsCertificates": false
   };
   
   try {
@@ -145,15 +150,16 @@ function testOdooConnection(url, token) {
     };
   }
   
-  var fullUrl = cleanUrl + "/api/odoo_to_sheets/test_connection";
+  var fullUrl = cleanUrl + "/api/odoo_to_sheets/test_connection?access_token=" + encodeURIComponent(token.trim());
   var options = {
     "method": "post",
     "headers": {
       "Authorization": "Bearer " + token.trim(),
       "Content-Type": "application/json"
     },
-    "payload": JSON.stringify({}),
-    "muteHttpExceptions": true
+    "payload": JSON.stringify({ access_token: token.trim() }),
+    "muteHttpExceptions": true,
+    "validateHttpsCertificates": false
   };
   
   try {
@@ -296,23 +302,29 @@ function showSelectTablesDialog() {
     'var models = [];' +
     'var selectedModel = null;' +
     'var fields = [];' +
-    'window.onload = function() {' +
+    'function loadTables() {' +
+    '  document.getElementById("loader").style.display = "block";' +
+    '  document.getElementById("loader").innerHTML = "Loading tables from Odoo...";' +
+    '  document.getElementById("tablesList").style.display = "none";' +
     '  google.script.run.withSuccessHandler(function(res) {' +
-    '    models = res.data || [];' +
+    '    models = (res && res.data) ? res.data : [];' +
     '    renderTables(models);' +
     '    document.getElementById("loader").style.display = "none";' +
     '    document.getElementById("tablesList").style.display = "block";' +
     '  }).withFailureHandler(function(err) {' +
-    '    document.getElementById("loader").innerHTML = "<span style=\'color:red;\'>" + err.message + "</span>";' +
+    '    document.getElementById("loader").innerHTML = "<div style=\'color:#dc2626; padding:12px; font-weight:600; line-height:1.4;\'>Failed to load tables:<br/><span style=\'font-size:12px; font-weight:normal; color:#b91c1c;\'>" + err.message + "</span><br/><button onclick=\'loadTables()\' style=\'margin-top:8px; padding:4px 10px; cursor:pointer;\'>Retry</button></div>";' +
     '  }).getOdooModels();' +
-    '};' +
+    '}' +
+    'loadTables();' +
     'function renderTables(list) {' +
     '  var html = "";' +
     '  for (var i = 0; i < list.length; i++) {' +
     '    var m = list[i];' +
-    '    html += "<div class=\'item-row\' onclick=\'selectTable(\"" + m.model + "\")\'>" +' +
+    '    var modelSafe = m.model.replace(/\'/g, "\\'");' +
+    '    var nameSafe = (m.name || m.model).replace(/</g, "&lt;").replace(/>/g, "&gt;");' +
+    '    html += "<div class=\'item-row\' onclick=\'selectTable(\"" + modelSafe + "\")\'>" +' +
     '            "<input type=\'radio\' name=\'tableRadio\' id=\'rad_" + m.model + "\' value=\'" + m.model + "\'/>" +' +
-    '            "<span class=\'item-title\'>" + m.name + "</span>" +' +
+    '            "<span class=\'item-title\'>" + nameSafe + "</span>" +' +
     '            "<span class=\'item-sub\'>(" + m.model + ")</span>" +' +
     '            "</div>";' +
     '  }' +
@@ -509,7 +521,7 @@ function showSendDataToOdooDialog() {
     'var allSheets = ' + JSON.stringify(sheetNames) + ';' +
     'var selectedSheet = null;' +
     'var columns = [];' +
-    'window.onload = function() {' +
+    'function initSheets() {' +
     '  var html = "";' +
     '  for (var i = 0; i < allSheets.length; i++) {' +
     '    var s = allSheets[i];' +
@@ -518,7 +530,8 @@ function showSendDataToOdooDialog() {
     '            "<span class=\'item-title\'>" + s + "</span></div>";' +
     '  }' +
     '  document.getElementById("sheetsList").innerHTML = html || "No sheets found.";' +
-    '};' +
+    '}' +
+    'initSheets();' +
     'function selectSheet(s) {' +
     '  selectedSheet = s;' +
     '  var rad = document.getElementById("s_" + s);' +
@@ -684,7 +697,7 @@ function showAutoImportRefreshDialog() {
     '</div>' +
     '<script>' +
     'var sheets = ' + JSON.stringify(sheetNames) + ';' +
-    'window.onload = function() {' +
+    'function initImportRows() {' +
     '  var html = "";' +
     '  for (var i = 0; i < sheets.length; i++) {' +
     '    html += "<div class=\'sheet-row\'>" +' +
@@ -693,7 +706,8 @@ function showAutoImportRefreshDialog() {
     '            "</div>";' +
     '  }' +
     '  document.getElementById("list").innerHTML = html;' +
-    '};' +
+    '}' +
+    'initImportRows();' +
     'function saveSchedulers() {' +
     '  var configs = {};' +
     '  for (var i = 0; i < sheets.length; i++) {' +
@@ -788,7 +802,7 @@ function showAutoExportRefreshDialog() {
     '</div>' +
     '<script>' +
     'var sheets = ' + JSON.stringify(sheetNames) + ';' +
-    'window.onload = function() {' +
+    'function initImportRows() {' +
     '  var html = "";' +
     '  for (var i = 0; i < sheets.length; i++) {' +
     '    html += "<div class=\'sheet-row\'>" +' +
@@ -797,7 +811,8 @@ function showAutoExportRefreshDialog() {
     '            "</div>";' +
     '  }' +
     '  document.getElementById("list").innerHTML = html;' +
-    '};' +
+    '}' +
+    'initImportRows();' +
     'function saveSchedulers() {' +
     '  var configs = {};' +
     '  for (var i = 0; i < sheets.length; i++) {' +

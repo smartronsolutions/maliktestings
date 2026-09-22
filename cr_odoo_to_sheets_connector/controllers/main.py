@@ -29,14 +29,22 @@ class CrGoogleSheetConnectorController(http.Controller):
             token = str(data.get('access_token')).strip()
         elif kwargs.get('access_token'):
             token = str(kwargs.get('access_token')).strip()
+        elif request.httprequest.args.get('access_token'):
+            token = str(request.httprequest.args.get('access_token')).strip()
+        elif request.httprequest.form.get('access_token'):
+            token = str(request.httprequest.form.get('access_token')).strip()
 
         if not token:
+            _logger.warning("Google Sheet Connector: Authentication failed - no token provided in header, body, or URL args.")
             return False
 
         config = request.env['cr.google.sheet.connector.config'].sudo().search([
             ('access_token', '=', token)
         ], limit=1)
-        return bool(config)
+        if not config:
+            _logger.warning("Google Sheet Connector: Token '%s' not found in database.", token[:6] + '...' if len(token) > 6 else token)
+            return False
+        return True
 
     @http.route('/api/odoo_to_sheets/test_connection', type='http', auth='public', methods=['POST', 'GET'], cors='*', csrf=False)
     def test_connection(self, **kwargs):
