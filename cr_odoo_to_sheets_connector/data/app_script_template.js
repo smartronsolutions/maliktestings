@@ -317,18 +317,34 @@ function showSelectTablesDialog() {
     '}' +
     'loadTables();' +
     'function renderTables(list) {' +
-    '  var html = "";' +
-    '  for (var i = 0; i < list.length; i++) {' +
-    '    var m = list[i];' +
-    '    var modelSafe = m.model.replace(/\'/g, "\\'");' +
-    '    var nameSafe = (m.name || m.model).replace(/</g, "&lt;").replace(/>/g, "&gt;");' +
-    '    html += "<div class=\'item-row\' onclick=\'selectTable(\"" + modelSafe + "\")\'>" +' +
-    '            "<input type=\'radio\' name=\'tableRadio\' id=\'rad_" + m.model + "\' value=\'" + m.model + "\'/>" +' +
-    '            "<span class=\'item-title\'>" + nameSafe + "</span>" +' +
-    '            "<span class=\'item-sub\'>(" + m.model + ")</span>" +' +
-    '            "</div>";' +
+    '  var container = document.getElementById("tablesList");' +
+    '  container.innerHTML = "";' +
+    '  if (!list || list.length === 0) {' +
+    '    container.innerHTML = "<div style=\'padding:10px; color:#666;\'>No tables found.</div>";' +
+    '    return;' +
     '  }' +
-    '  document.getElementById("tablesList").innerHTML = html || "<div style=\'padding:10px; color:#666;\'>No tables found.</div>";' +
+    '  for (var i = 0; i < list.length; i++) {' +
+    '    (function(m) {' +
+    '      var row = document.createElement("div");' +
+    '      row.className = "item-row";' +
+    '      row.onclick = function() { selectTable(m.model); };' +
+    '      var rad = document.createElement("input");' +
+    '      rad.type = "radio";' +
+    '      rad.name = "tableRadio";' +
+    '      rad.id = "rad_" + m.model;' +
+    '      rad.value = m.model;' +
+    '      var title = document.createElement("span");' +
+    '      title.className = "item-title";' +
+    '      title.textContent = m.name || m.model;' +
+    '      var sub = document.createElement("span");' +
+    '      sub.className = "item-sub";' +
+    '      sub.textContent = " (" + m.model + ")";' +
+    '      row.appendChild(rad);' +
+    '      row.appendChild(title);' +
+    '      row.appendChild(sub);' +
+    '      container.appendChild(row);' +
+    '    })(list[i]);' +
+    '  }' +
     '}' +
     'function filterTables() {' +
     '  var q = document.getElementById("tableSearch").value.toLowerCase();' +
@@ -360,17 +376,38 @@ function showSelectTablesDialog() {
     '  }).getOdooFields(selectedModel);' +
     '}' +
     'function renderFields(list) {' +
-    '  var html = "";' +
+    '  var container = document.getElementById("fieldsList");' +
+    '  container.innerHTML = "";' +
+    '  if (!list || list.length === 0) {' +
+    '    container.innerHTML = "<div style=\'padding:10px; color:#666;\'>No fields found.</div>";' +
+    '    return;' +
+    '  }' +
     '  for (var i = 0; i < list.length; i++) {' +
     '    var f = list[i];' +
-    '    html += "<div class=\'item-row\'>" +' +
-    '            "<input type=\'checkbox\' class=\'field-chk\' id=\'fld_" + f.name + "\' value=\'" + f.name + "\' onchange=\'updateCount()\'/>" +' +
-    '            "<label for=\'fld_" + f.name + "\' style=\'cursor:pointer; flex:1;\'>" +' +
-    '            "<span class=\'item-title\'>" + f.string + "</span>" +' +
-    '            "<span class=\'item-sub\'>(" + f.name + ")</span>" +' +
-    '            "</label></div>";' +
+    '    var row = document.createElement("div");' +
+    '    row.className = "item-row";' +
+    '    var chk = document.createElement("input");' +
+    '    chk.type = "checkbox";' +
+    '    chk.className = "field-chk";' +
+    '    chk.id = "fld_" + f.name;' +
+    '    chk.value = f.name;' +
+    '    chk.onchange = updateCount;' +
+    '    var lbl = document.createElement("label");' +
+    '    lbl.htmlFor = "fld_" + f.name;' +
+    '    lbl.style.cursor = "pointer";' +
+    '    lbl.style.flex = "1";' +
+    '    var title = document.createElement("span");' +
+    '    title.className = "item-title";' +
+    '    title.textContent = f.string || f.name;' +
+    '    var sub = document.createElement("span");' +
+    '    sub.className = "item-sub";' +
+    '    sub.textContent = " (" + f.name + ")";' +
+    '    lbl.appendChild(title);' +
+    '    lbl.appendChild(sub);' +
+    '    row.appendChild(chk);' +
+    '    row.appendChild(lbl);' +
+    '    container.appendChild(row);' +
     '  }' +
-    '  document.getElementById("fieldsList").innerHTML = html || "<div style=\'padding:10px; color:#666;\'>No fields found.</div>";' +
     '}' +
     'function filterFields() {' +
     '  var q = document.getElementById("fieldSearch").value.toLowerCase();' +
