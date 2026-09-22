@@ -36,7 +36,9 @@ function onOpen() {
 function normalizeUrl(url) {
   if (!url) return "";
   url = url.trim().replace(/\/+$/, "");
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+  if (url.startsWith("http://") && url.indexOf("localhost") === -1 && url.indexOf("127.0.0.1") === -1) {
+    url = "https://" + url.substring(7);
+  } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
     url = "https://" + url;
   }
   return url;
@@ -60,8 +62,12 @@ function getConnectorConfig() {
   var props = PropertiesService.getDocumentProperties();
   var url = props.getProperty('ODOO_CONNECTOR_URL') || DEFAULT_ODOO_URL;
   var token = props.getProperty('ODOO_ACCESS_TOKEN') || DEFAULT_ACCESS_TOKEN;
+  var cleanUrl = normalizeUrl(url);
+  if (props.getProperty('ODOO_CONNECTOR_URL') !== cleanUrl) {
+    props.setProperty('ODOO_CONNECTOR_URL', cleanUrl);
+  }
   return {
-    url: normalizeUrl(url),
+    url: cleanUrl,
     token: (token || "").trim()
   };
 }
@@ -471,7 +477,8 @@ function processFetchData(modelName, selectedFields) {
   if (!modelName || modelName === "null" || modelName === "undefined") {
     throw new Error("No table selected. Please select a table first.");
   }
-  var res = callOdooApi("/api/odoo_to_sheets/fetch_data?model=" + encodeURIComponent(modelName), {
+  var fieldsParam = (Array.isArray(selectedFields) ? selectedFields.join(",") : "");
+  var res = callOdooApi("/api/odoo_to_sheets/fetch_data?model=" + encodeURIComponent(modelName) + "&fields=" + encodeURIComponent(fieldsParam), {
     model: modelName,
     fields: selectedFields
   });
