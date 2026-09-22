@@ -102,10 +102,12 @@ function callOdooApi(endpoint, payload) {
   
   var options = {
     "method": "post",
+    "contentType": "application/json; charset=utf-8",
     "headers": headers,
     "payload": JSON.stringify(payloadObj),
     "muteHttpExceptions": true,
-    "validateHttpsCertificates": false
+    "validateHttpsCertificates": false,
+    "followRedirects": true
   };
   
   try {
@@ -502,6 +504,14 @@ function processFetchData(modelName, selectedFields) {
   }
   
   if (output.length > 0 && output[0].length > 0) {
+    var maxCols = sheet.getMaxColumns();
+    if (maxCols < output[0].length) {
+      sheet.insertColumnsAfter(maxCols, output[0].length - maxCols);
+    }
+    var maxRows = sheet.getMaxRows();
+    if (maxRows < output.length) {
+      sheet.insertRowsAfter(maxRows, output.length - maxRows);
+    }
     var range = sheet.getRange(1, 1, output.length, output[0].length);
     range.setValues(output);
     
@@ -954,7 +964,7 @@ function showRefreshNowDialog() {
     '</div>' +
     '<script>' +
     'var sheets = ' + JSON.stringify(sheetNames) + ';' +
-    'window.onload = function() {' +
+    'function initRefreshRows() {' +
     '  var html = "";' +
     '  for (var i = 0; i < sheets.length; i++) {' +
     '    html += "<div class=\'sheet-row\'>" +' +
@@ -963,7 +973,8 @@ function showRefreshNowDialog() {
     '            "</div>";' +
     '  }' +
     '  document.getElementById("list").innerHTML = html;' +
-    '};' +
+    '}' +
+    'initRefreshRows();' +
     'function doRefresh() {' +
     '  var chks = document.getElementsByClassName("ref-chk");' +
     '  var selected = [];' +

@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 class CrGoogleSheetConnectorController(http.Controller):
 
     def _get_request_data(self, **kwargs):
-        """Extracts JSON body and merges URL kwargs and args."""
+        """Extracts JSON body and merges URL kwargs, args, and form data."""
         data = {}
         try:
             data = request.get_json_data() or {}
@@ -23,6 +23,15 @@ class CrGoogleSheetConnectorController(http.Controller):
                     data = json.loads(raw)
             except Exception:
                 pass
+        if not data and request.httprequest.form:
+            for k in request.httprequest.form.keys():
+                k_str = str(k).strip()
+                if k_str.startswith('{') and k_str.endswith('}'):
+                    try:
+                        data = json.loads(k_str)
+                        break
+                    except Exception:
+                        pass
         if not data:
             data = {}
         if kwargs:
@@ -184,6 +193,15 @@ class CrGoogleSheetConnectorController(http.Controller):
         domain = data.get('domain') or []
         limit = data.get('limit') or 2000
 
+        if isinstance(selected_fields, str):
+            try:
+                selected_fields = json.loads(selected_fields)
+            except Exception:
+                selected_fields = [f.strip() for f in selected_fields.split(',') if f.strip()]
+
+        if not isinstance(selected_fields, list):
+            selected_fields = []
+
         if not model_name or model_name not in request.env:
             return request.make_json_response({'status': 'error', 'message': f"Model '{model_name}' not found."})
 
@@ -257,6 +275,13 @@ class CrGoogleSheetConnectorController(http.Controller):
 
         model_name = data.get('model') or kwargs.get('model')
         rows = data.get('rows') or kwargs.get('rows') or []
+        if isinstance(rows, str):
+            try:
+                rows = json.loads(rows)
+            except Exception:
+                rows = []
+        if not isinstance(rows, list):
+            rows = []
 
         if not model_name or model_name not in request.env:
             return request.make_json_response({'status': 'error', 'message': f"Model '{model_name}' not found."})
